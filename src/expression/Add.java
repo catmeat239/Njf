@@ -35,6 +35,6 @@ public class Add extends BinaryExpression {
 
     @Override
     public int getPriority() {
-        return 2000;
+        return -2000;
     }
 }

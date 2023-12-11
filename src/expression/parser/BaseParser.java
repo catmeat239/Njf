@@ -3,7 +3,7 @@ package expression.parser;
 public class BaseParser {
     private static final char END = 0;
     private final CharSource source;
-    private char ch = 0;
+    private char ch;
 
     protected BaseParser(final CharSource source) {
         this.source = source;

@@ -3,7 +3,7 @@ package expression;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-public class Variable extends NullaryExpression {
+public class Variable extends NullaryExpression implements SomeExpression {
     private final String variable;
 
     public Variable(String variable) {

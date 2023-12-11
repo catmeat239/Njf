@@ -2,7 +2,6 @@ package expression.parser;
 
 import expression.*;
 
-import java.text.ParseException;
 import java.util.InputMismatchException;
 
 public class ExpressionParser implements TripleParser {
@@ -22,10 +21,21 @@ public class ExpressionParser implements TripleParser {
 
         public TripleExpression parseExpression() {
             skipWhitespaces();
+            TripleExpression firstExpression = parseSingleExpression();
+            skipWhitespaces();
+            if (take('+')) {
+            } else if (take('-')) {
+
+            } else if (take('*')) {
+
+            } else if (take('\\')) {
+
+            } else {
+                return firstExpression;
+            }
+
             if (take('(')) {
-                TripleExpression result = parseExpression();
-                expect(')');
-                return result;
+                return parseBraces();
             } else if (take('x') || take('y') || take('z')) {
                 return parseVariable();
             } else if (take('-')) {
@@ -35,11 +45,21 @@ public class ExpressionParser implements TripleParser {
             }
         }
 
+        private TripleExpression parseSingleExpression() {
+return null;
+        }
+
+        private TripleExpression parseBraces() {
+            TripleExpression result = parseExpression();
+            expect(')');
+            return result;
+        }
+
         private TripleExpression parseMinus() {
             if (test(Character::isDigit)) {
                 return parseInteger();
             } else {
-                return new Minus((SomeExpression) parseExpression());
+                return new Negate((SomeExpression) parseExpression());
             }
         }
 
@@ -56,10 +76,11 @@ public class ExpressionParser implements TripleParser {
             }
             skipWhitespaces();
             if (take('+')) {
-                return new Add((SomeExpression) expression1, (SomeExpression)parseExpression());
+                return new Add((SomeExpression) expression1, (SomeExpression) parseExpression());
             } else if (take('-')) {
 
             }
+            return null;
         }
 
         private TripleExpression parseVariable() {

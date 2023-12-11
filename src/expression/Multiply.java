@@ -35,6 +35,6 @@ public class Multiply extends BinaryExpression {
 
     @Override
     public int getPriority() {
-        return 1000;
+        return -1000;
     }
 }

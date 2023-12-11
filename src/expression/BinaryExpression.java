@@ -5,8 +5,8 @@ import java.util.Objects;
 
 public abstract class BinaryExpression implements SomeExpression {
 
-    protected final SomeExpression expression1;
-    protected final SomeExpression expression2;
+    private final SomeExpression expression1;
+    private final SomeExpression expression2;
 
     public BinaryExpression(SomeExpression expression1, SomeExpression expression2) {
         this.expression1 = expression1;
@@ -42,27 +42,14 @@ public abstract class BinaryExpression implements SomeExpression {
                 ")";
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj != null && this.getClass() == obj.getClass()) {
-            BinaryExpression that = (BinaryExpression) obj;
-            return this.expression1.equals(that.expression1)
-                    && this.expression2.equals(that.expression2);
-        }
-        return false;
-    }
-
     private boolean needBracesOnFirstExpression() {
-        return expression1.getPriority() > this.getPriority();
+        return expression1.getPriority() < this.getPriority();
     }
 
     private boolean needBracesOnSecondExpression() {
-        return expression2.getPriority() > this.getPriority() ||
+        return expression2.getPriority() < this.getPriority() ||
 
-                expression2.getPriority() >= this.getPriority() &&
+                expression2.getPriority() == this.getPriority() &&
                         !(expression2 instanceof NullaryExpression) &&
                         (this.getClass() != expression2.getClass() || !this.isAssociative()) &&
                         (this.getClass() == expression2.getClass() || !this.isAssociativeWithOthers());
@@ -94,7 +81,18 @@ public abstract class BinaryExpression implements SomeExpression {
         }
         return String.valueOf(sb);
     }
-
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj != null && this.getClass() == obj.getClass()) {
+            BinaryExpression that = (BinaryExpression) obj;
+            return this.expression1.equals(that.expression1)
+                    && this.expression2.equals(that.expression2);
+        }
+        return false;
+    }
     @Override
     public int hashCode() {
         return Objects.hash(expression1.hashCode(), expression2.hashCode(), this.getSign());

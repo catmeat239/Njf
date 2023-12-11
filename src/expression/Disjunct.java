@@ -2,25 +2,24 @@ package expression;
 
 import java.math.BigDecimal;
 
-public class Subtract extends BinaryExpression {
-    public Subtract(SomeExpression expression1, SomeExpression expression2) {
+public class Disjunct extends BinaryExpression {
+    public Disjunct(SomeExpression expression1, SomeExpression expression2) {
         super(expression1, expression2);
     }
 
-
     @Override
     protected String getSign() {
-        return "-";
+        return "|";
     }
 
     @Override
     protected int getResult(int x, int y) {
-        return x - y;
+        return x | y;
     }
 
     @Override
     protected BigDecimal getResult(BigDecimal x, BigDecimal y) {
-        return x.subtract(y);
+        throw new IllegalCallerException("BigDecimal doesn't support bitwise disjunction");
     }
 
     @Override
@@ -30,11 +29,11 @@ public class Subtract extends BinaryExpression {
 
     @Override
     protected boolean isAssociative() {
-        return false;
+        return true;
     }
 
     @Override
     public int getPriority() {
-        return -2000;
+        return -30000;
     }
 }

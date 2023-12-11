@@ -4,7 +4,7 @@ package expression;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-public class Const extends NullaryExpression {
+public class Const extends NullaryExpression implements SomeExpression {
     private final Object c;
 
     public Const(BigDecimal c) {
