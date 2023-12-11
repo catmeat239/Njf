@@ -2,8 +2,6 @@ package expression.parser;
 
 import expression.*;
 
-import java.util.InputMismatchException;
-
 public class ExpressionParser implements TripleParser {
 
 
@@ -14,84 +12,169 @@ public class ExpressionParser implements TripleParser {
 
     private static class RealParser extends BaseParser {
 
-        protected RealParser(CharSource source) {
+        public RealParser(CharSource source) {
             super(source);
         }
 
-
-        public TripleExpression parseExpression() {
+        public SomeExpression parseExpression() {
             skipWhitespaces();
-            TripleExpression firstExpression = parseSingleExpression();
+            final SomeExpression expression = parseDisjunct();
             skipWhitespaces();
-            if (take('+')) {
-            } else if (take('-')) {
+            return expression;
+        }
 
-            } else if (take('*')) {
 
-            } else if (take('\\')) {
-
-            } else {
-                return firstExpression;
+        private SomeExpression parseDisjunct() {
+            SomeExpression expression = parseExclusiveDisjunct();
+            while (true) {
+                skipWhitespaces();
+                if (take('|')) {
+                    expression = new Disjunct(expression, parseExclusiveDisjunct());
+                } else {
+                    return expression;
+                }
             }
+        }
 
+        private SomeExpression parseExclusiveDisjunct() {
+            SomeExpression expression = parseConjunct();
+            while (true) {
+                skipWhitespaces();
+                if (take('^')) {
+                    expression = new ExclusiveDisjunct(expression, parseConjunct());
+                } else {
+                    return expression;
+                }
+            }
+        }
+
+        private SomeExpression parseConjunct() {
+            SomeExpression expression = parseAddSubtract();
+
+            while (true) {
+                skipWhitespaces();
+                if (take('&')) {
+                    expression = new Conjunct(expression, parseAddSubtract());
+                } else {
+                    return expression;
+                }
+            }
+        }
+
+        private SomeExpression parseAddSubtract() {
+            SomeExpression expression = parseDivideMultiply();
+            while (true) {
+                skipWhitespaces();
+                if (take('+')) {
+                    expression = new Add(expression, parseDivideMultiply());
+                } else if (take('-')) {
+                    expression = new Subtract(expression, parseDivideMultiply());
+                } else {
+                    return expression;
+                }
+            }
+        }
+
+        private SomeExpression parseDivideMultiply() {
+            SomeExpression expression = parseUnaryExpression();
+            while (true) {
+                skipWhitespaces();
+                if (take('/')) {
+                    expression = new Divide(expression, parseUnaryExpression());
+                } else if (take('*')) {
+                    expression = new Multiply(expression, parseUnaryExpression());
+                } else {
+                    return expression;
+                }
+            }
+        }
+
+        private SomeExpression parseUnaryExpression() {
+            skipWhitespaces();
+            if (take('-')) {
+                return parseMinus();
+            } else if (take('h')) {
+                return parseHighestOneBit();
+            } else if (take('t')) {
+                return parseNumberOfTrailingOnesO();
+            } else if (take('l')) {
+                if (take('1')) {
+                    return parseNumberOfLeadingZeroes();
+                } else {
+                    return parseLowestOneBit();
+                }
+            } else {
+                return parseNullaryExpression();
+            }
+        }
+
+        private SomeExpression parseNumberOfLeadingZeroes() {
+            skipWhitespaces();
+            return new NumberOfLeadingOnes(parseUnaryExpression());
+        }
+
+        private SomeExpression parseNumberOfTrailingOnesO() {
+            expect('1');
+            return new NumberOfTrailingOnes(parseUnaryExpression());
+        }
+
+        private SomeExpression parseLowestOneBit() {
+            expect("ow");
+            skipWhitespaces();
+            return new LowestOneBit(parseUnaryExpression());
+        }
+
+        private SomeExpression parseHighestOneBit() {
+            expect("igh");
+            skipWhitespaces();
+            return new HighestOneBit(parseUnaryExpression());
+        }
+
+        private SomeExpression parseMinus() {
+            if (test(Character::isDigit)) {
+                return new Const(parseConst(true));
+            } else {
+                skipWhitespaces();
+                return new Negate(parseUnaryExpression());
+            }
+        }
+
+        private SomeExpression parseNullaryExpression() {
+            skipWhitespaces();
             if (take('(')) {
                 return parseBraces();
-            } else if (take('x') || take('y') || take('z')) {
-                return parseVariable();
-            } else if (take('-')) {
-                return parseMinus();
-            } else {
-                return parseInteger();
-            }
-        }
-
-        private TripleExpression parseSingleExpression() {
-return null;
-        }
-
-        private TripleExpression parseBraces() {
-            TripleExpression result = parseExpression();
-            expect(')');
-            return result;
-        }
-
-        private TripleExpression parseMinus() {
-            if (test(Character::isDigit)) {
-                return parseInteger();
-            } else {
-                return new Negate((SomeExpression) parseExpression());
-            }
-        }
-
-        private TripleExpression parseInteger() {
-            StringBuilder sb = new StringBuilder();
-            while (test(Character::isDigit)) {
-                sb.append(take());
-            }
-            TripleExpression expression1;
-            try {
-                expression1 = new Const(Integer.parseInt(sb.toString()));
-            } catch (InputMismatchException e) {
-                throw error("Not parseable integer " + sb);
-            }
-            skipWhitespaces();
-            if (take('+')) {
-                return new Add((SomeExpression) expression1, (SomeExpression) parseExpression());
-            } else if (take('-')) {
-
-            }
-            return null;
-        }
-
-        private TripleExpression parseVariable() {
-            if (take('x')) {
+            } else if (take('x')) {
                 return new Variable("x");
             } else if (take('y')) {
                 return new Variable("y");
             } else if (take('z')) {
                 return new Variable("z");
             } else {
-                throw error("parseVariable: Expected x or y or z");
+                return new Const(parseConst(false));
+            }
+        }
+
+        private SomeExpression parseBraces() {
+            final SomeExpression result = parseExpression();
+            expect(')');
+            return result;
+        }
+
+        private int parseConst(boolean isInverted) {
+            final StringBuilder sb = new StringBuilder();
+            if (isInverted) {
+                sb.append('-');
+            }
+            if (take('-')) {
+                sb.append('-');
+            }
+            while (test(Character::isDigit)) {
+                sb.append(take());
+            }
+            try {
+                return Integer.parseInt(sb.toString());
+            } catch (NumberFormatException e) {
+                throw error("Not parseable integer: " + "'" + sb + "'");
             }
         }
 

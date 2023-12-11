@@ -10,16 +10,16 @@ public class StringCharSource implements CharSource {
 
     @Override
     public boolean hasNext() {
-        return false;
+        return pos < string.length();
     }
 
     @Override
     public char next() {
-        return 0;
+        return string.charAt(pos++);
     }
 
     @Override
     public IllegalArgumentException error(String message) {
-        return null;
+        return new IllegalArgumentException(pos + ": " + message);
     }
 }

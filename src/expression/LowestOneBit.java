@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public class LowestOneBit extends UnaryExpression {
 
-    protected LowestOneBit(SomeExpression expression) {
+    public LowestOneBit(SomeExpression expression) {
         super(expression);
     }
 

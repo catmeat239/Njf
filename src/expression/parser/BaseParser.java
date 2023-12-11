@@ -25,7 +25,7 @@ public class BaseParser {
     }
 
     protected boolean take(final char expected) {
-        return take((char c) -> ch == c);
+        return take((char c) -> c == expected);
     }
 
     protected boolean take(final Expectable expectable) {

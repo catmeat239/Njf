@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public class NumberOfLeadingOnes extends UnaryExpression {
 
-    protected NumberOfLeadingOnes(SomeExpression expression) {
+    public NumberOfLeadingOnes(SomeExpression expression) {
         super(expression);
     }
 

@@ -33,8 +33,8 @@ public abstract class UnaryExpression implements SomeExpression {
 
     @Override
     public String toMiniString() {
-        if (expression.getPriority() <= this.getPriority()) {
-            return getSign() + " (" + expression.toMiniString() + ")";
+        if (expression.getPriority() < this.getPriority()) {
+            return getSign() + "(" + expression.toMiniString() + ")";
         } else {
             return getSign() + " " + expression.toMiniString();
         }
@@ -42,7 +42,7 @@ public abstract class UnaryExpression implements SomeExpression {
 
     @Override
     public String toString() {
-        return getSign() + " " + expression.toString();
+        return getSign() + "(" + expression.toString() + ")";
     }
 
     @Override

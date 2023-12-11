@@ -3,7 +3,7 @@ package expression;
 import java.math.BigDecimal;
 
 public class HighestOneBit extends UnaryExpression {
-    protected HighestOneBit(SomeExpression expression) {
+    public HighestOneBit(SomeExpression expression) {
         super(expression);
     }
 

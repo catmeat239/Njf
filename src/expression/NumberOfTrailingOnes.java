@@ -3,7 +3,7 @@ package expression;
 import java.math.BigDecimal;
 
 public class NumberOfTrailingOnes extends UnaryExpression{
-    protected NumberOfTrailingOnes(SomeExpression expression) {
+    public NumberOfTrailingOnes(SomeExpression expression) {
         super(expression);
     }
 

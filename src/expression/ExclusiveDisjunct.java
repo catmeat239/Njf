@@ -14,7 +14,7 @@ public class ExclusiveDisjunct extends BinaryExpression {
 
     @Override
     protected int getResult(int x, int y) {
-        return x | y;
+        return x ^ y;
     }
 
     @Override
