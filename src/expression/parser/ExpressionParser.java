@@ -1,18 +1,35 @@
 package expression.parser;
 
 import expression.*;
+
 public class ExpressionParser implements TripleParser {
 
 
     @Override
     public TripleExpression parse(String expression) {
-        return new RealParser(new StringCharSource(expression)).parseExpression();
+        return new RealParser(new StringCharSource(expression)).parse();
     }
 
     private static class RealParser extends BaseParser {
 
+        private static final String[][] SIGN = {
+                {"*", "/"},
+                {"+", "-"},
+                {"&"},
+                {"^"},
+                {"|"}
+        };
+
         public RealParser(CharSource source) {
             super(source);
+        }
+
+        public SomeExpression parse() {
+            final SomeExpression result = parseExpression();
+            if (!eof()) {
+                throw error("Expected eof");
+            }
+            return result;
         }
 
         public SomeExpression parseExpression() {
@@ -21,13 +38,6 @@ public class ExpressionParser implements TripleParser {
             skipWhitespaces();
             return expression;
         }
-        private static final String [][] SIGN = {
-                {"*", "/"},
-                {"+", "-"},
-                {"&"},
-                {"^"},
-                {"|"}
-        };
         private SomeExpression createBinaryExpression(SomeExpression expression1, SomeExpression expression2, String op) {
             return switch (op) {
                 case "/" -> new Divide(expression1, expression2);

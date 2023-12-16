@@ -10,13 +10,21 @@ public class ExpressionParser implements TripleParser {
 
     @Override
     public TripleExpression parse(String expression) {
-        return new RealParser(new StringCharSource(expression)).parseExpression();
+        return new RealParser(new StringCharSource(expression)).parse();
     }
 
     private static class RealParser extends BaseParser {
 
         public RealParser(CharSource source) {
             super(source);
+        }
+
+        public SomeExpression parse() {
+            final SomeExpression result = parseExpression();
+            if (!eof()) {
+                throw error("Expected eof");
+            }
+            return result;
         }
 
         public SomeExpression parseExpression() {
@@ -106,7 +114,7 @@ public class ExpressionParser implements TripleParser {
                 return parseConst(true);
             } else {
                 skipWhitespaces();
-                return new Negate(parseUnaryExpression());
+                return new CheckedNegate(parseUnaryExpression());
             }
         }
 
