@@ -1,6 +1,10 @@
-package expression.parser;
+package expression.exceptions;
 
 import expression.*;
+import expression.parser.BaseParser;
+import expression.parser.CharSource;
+import expression.parser.StringCharSource;
+
 public class ExpressionParser implements TripleParser {
 
 
@@ -23,21 +27,14 @@ public class ExpressionParser implements TripleParser {
         }
         private static final String [][] SIGN = {
                 {"*", "/"},
-                {"+", "-"},
-                {"&"},
-                {"^"},
-                {"|"}
+                {"+", "-"}
         };
         private SomeExpression createBinaryExpression(SomeExpression expression1, SomeExpression expression2, String op) {
             return switch (op) {
-                case "/" -> new Divide(expression1, expression2);
-                case "*" -> new Multiply(expression1, expression2);
-                case "+" -> new Add(expression1, expression2);
-                case "-" -> new Subtract(expression1, expression2);
-                case "&" -> new Conjunct(expression1, expression2);
-                case "^" -> new ExclusiveDisjunct(expression1, expression2);
-                case "|" -> new Disjunct(expression1, expression2);
-
+                case "/" -> new CheckedDivide(expression1, expression2);
+                case "*" -> new CheckedMultiply(expression1, expression2);
+                case "+" -> new CheckedAdd(expression1, expression2);
+                case "-" -> new CheckedSubtract(expression1, expression2);
                 default -> throw error("No such op: " + op);
             };
         }

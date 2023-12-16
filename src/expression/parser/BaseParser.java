@@ -27,6 +27,13 @@ public class BaseParser {
     protected boolean take(final char expected) {
         return take((char c) -> c == expected);
     }
+    protected boolean take(final String expected) {
+        if (take(expected.charAt(0))) {
+            expect(expected.substring(1));
+            return true;
+        }
+        return false;
+    }
 
     protected boolean take(final Expectable expectable) {
         if (expectable.expected(ch)) {
