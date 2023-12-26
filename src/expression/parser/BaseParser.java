@@ -4,6 +4,7 @@ public class BaseParser {
     private static final char END = 0;
     private final CharSource source;
     private char ch;
+    private char pred;
 
     protected BaseParser(final CharSource source) {
         this.source = source;
@@ -11,6 +12,7 @@ public class BaseParser {
     }
 
     protected char take() {
+        pred = ch;
         final char result = ch;
         ch = source.hasNext() ? source.next() : END;
         return result;
@@ -27,6 +29,7 @@ public class BaseParser {
     protected boolean take(final char expected) {
         return take((char c) -> c == expected);
     }
+
     protected boolean take(final String expected) {
         if (take(expected.charAt(0))) {
             expect(expected.substring(1));
@@ -61,6 +64,9 @@ public class BaseParser {
 
     protected IllegalArgumentException error(final String message) {
         return source.error(message);
+    }
+    protected boolean checkPred(final Expectable expectable) {
+        return expectable.expected(pred);
     }
 
     protected boolean between(final char from, final char to) {

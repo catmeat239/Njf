@@ -3,6 +3,7 @@ package expression.exceptions;
 import expression.*;
 import expression.parser.BaseParser;
 import expression.parser.CharSource;
+import expression.parser.NoSuchOperationParserException;
 import expression.parser.StringCharSource;
 
 public class ExpressionParser implements TripleParser {
@@ -15,6 +16,18 @@ public class ExpressionParser implements TripleParser {
 
     private static class RealParser extends BaseParser {
 
+        private static final String[][] SIGN_OF_BINARY_EXPRESSION = {
+                {"*", "/"},
+                {"+", "-"},
+                {"min", "max"},
+                {">>>", "<<", ">>"}
+        };
+        private static final boolean[] NEED_WHITESPACES_FOR_BINARY_EXPRESSION = {
+                false,
+                false,
+                true,
+                false
+        };
         public RealParser(CharSource source) {
             super(source);
         }
@@ -22,28 +35,30 @@ public class ExpressionParser implements TripleParser {
         public SomeExpression parse() {
             final SomeExpression result = parseExpression();
             if (!eof()) {
-                throw error("Expected eof");
+                throw new NoEOFParserException("found " + take() + " after the end of Expression");
             }
             return result;
         }
 
         public SomeExpression parseExpression() {
             skipWhitespaces();
-            final SomeExpression expression = parseBinaryExpression(SIGN.length - 1);
+            final SomeExpression expression = parseBinaryExpression(SIGN_OF_BINARY_EXPRESSION.length - 1);
             skipWhitespaces();
             return expression;
         }
-        private static final String [][] SIGN = {
-                {"*", "/"},
-                {"+", "-"}
-        };
+
         private SomeExpression createBinaryExpression(SomeExpression expression1, SomeExpression expression2, String op) {
             return switch (op) {
                 case "/" -> new CheckedDivide(expression1, expression2);
                 case "*" -> new CheckedMultiply(expression1, expression2);
                 case "+" -> new CheckedAdd(expression1, expression2);
                 case "-" -> new CheckedSubtract(expression1, expression2);
-                default -> throw error("No such op: " + op);
+                case "min" -> new Min(expression1, expression2);
+                case "max" -> new Max(expression1, expression2);
+                case "<<" -> new ShiftL(expression1, expression2);
+                case ">>" -> new ShiftR(expression1, expression2);
+                case ">>>" -> new ArithmeticShiftR(expression1, expression2);
+                default -> throw new NoSuchOperationParserException("no such op: " + op);
             };
         }
 
@@ -52,25 +67,30 @@ public class ExpressionParser implements TripleParser {
                 return parseUnaryExpression();
             }
             SomeExpression expression1 = parseBinaryExpression(i - 1);
+            if (expression1 == null) {
+                throw new NoFirstArgumentException();
+            }
             while (true) {
+                boolean wasWhitespace = checkPred((ch) -> ch == ')' || Character.isWhitespace(ch));
                 skipWhitespaces();
-                boolean foundSecondExpression = false;
-                for (int j = 0; j < SIGN[i].length; j++) {
-                    if (take(SIGN[i][j])) {
-                        expression1 = createBinaryExpression(expression1,
-                                parseBinaryExpression(i - 1),
-                                SIGN[i][j]);
-                        foundSecondExpression = true;
-                        break;
-                    }
-                }
-                if (!foundSecondExpression) {
+                String op = takeOneOfSorted(SIGN_OF_BINARY_EXPRESSION[i]);
+                if (op == null) {
                     return expression1;
+                } else {
+                    if ((!wasWhitespace) && NEED_WHITESPACES_FOR_BINARY_EXPRESSION[i]) {
+                        throw new NoSeparatorParserException("Should be a whitespace or a ) before " + op);
+                    }
+                    SomeExpression expression2 = parseBinaryExpression(i - 1);
+                    if (expression2 == null) {
+                        throw new NoSecondArgumentException();
+                    }
+                    expression1 = createBinaryExpression(expression1, expression2, op);
                 }
             }
         }
 
-        private SomeExpression parseUnaryExpression() {
+
+            private SomeExpression parseUnaryExpression() {
             skipWhitespaces();
             if (take('-')) {
                 return parseMinus();
@@ -91,35 +111,54 @@ public class ExpressionParser implements TripleParser {
 
         private SomeExpression parseNumberOfLeadingZeroes() {
             skipWhitespaces();
-            return new NumberOfLeadingOnes(parseUnaryExpression());
+            SomeExpression expression = parseUnaryExpression();
+            if (expression == null) {
+                throw new NoArgumentParserException();
+            }
+            return new NumberOfLeadingOnes(expression);
         }
 
         private SomeExpression parseNumberOfTrailingOnesO() {
-            return new NumberOfTrailingOnes(parseUnaryExpression());
+            SomeExpression expression = parseUnaryExpression();
+            if (expression == null) {
+                throw new NoArgumentParserException();
+            }
+            return new NumberOfTrailingOnes(expression);
         }
 
         private SomeExpression parseLowestOneBit() {
             expect("ow");
             skipWhitespaces();
-            return new LowestOneBit(parseUnaryExpression());
+            SomeExpression expression = parseUnaryExpression();
+            if (expression == null) {
+                throw new NoArgumentParserException();
+            }
+            return new LowestOneBit(expression);
         }
 
         private SomeExpression parseHighestOneBit() {
             skipWhitespaces();
-            return new HighestOneBit(parseUnaryExpression());
+            SomeExpression expression = parseUnaryExpression();
+            if (expression == null) {
+                throw new NoArgumentParserException();
+            }
+            return new HighestOneBit(expression);
         }
 
         private SomeExpression parseMinus() {
             if (test(Character::isDigit)) {
                 return parseConst(true);
             } else {
-                skipWhitespaces();
-                return new CheckedNegate(parseUnaryExpression());
+                SomeExpression expression = parseUnaryExpression();
+                if (expression == null) {
+                    throw new NoArgumentParserException();
+                }
+                return new CheckedNegate(expression);
             }
         }
 
         private SomeExpression parseNullaryExpression() {
-            skipWhitespaces();
+            // skipWhitespaces();
             if (take('(')) {
                 return parseBraces();
             } else if (take('x')) {
@@ -150,6 +189,9 @@ public class ExpressionParser implements TripleParser {
             while (test(Character::isDigit)) {
                 sb.append(take());
             }
+            if (sb.isEmpty()) {
+                return null;
+            }
             try {
                 return new Const(Integer.parseInt(sb.toString()));
             } catch (NumberFormatException e) {
@@ -162,5 +204,35 @@ public class ExpressionParser implements TripleParser {
 
             }
         }
+        protected String takeOneOfSorted(final String[] expected) {
+            // for all i < n - 1
+            // expected[i].length() >= expected[i + 1].length()
+            StringBuilder sb = new StringBuilder();
+            findStringLoop:
+            for (String s : expected) {
+                int j = 0;
+                while (j < sb.length()) {
+                    if (sb.charAt(j) != s.charAt(j)) {
+                        continue findStringLoop;
+                    }
+                    j++;
+                }
+                while (j < s.length()) {
+                    if (take(s.charAt(j))) {
+                        sb.append(s.charAt(j));
+                    } else {
+                        continue findStringLoop;
+                    }
+                    j++;
+                }
+                // string found
+                return s;
+            }
+            if (!sb.isEmpty()) {
+                throw new NoSuchOperationParserException(sb.toString());
+            }
+            return null;
+        }
+
     }
 }

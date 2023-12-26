@@ -13,9 +13,10 @@ public class CheckedSubtract extends Subtract {
 
     @Override
     protected int getResult(int x, int y) {
-        if (x - y != (long)x - y) {
+        int result = super.getResult(x, y);
+        if (y < 0 && result < x || y > 0 && result > x) {
             throw new OverflowEvaluateException(x + getSign() + y);
         }
-        return super.getResult(x, y);
+        return result;
     }
 }

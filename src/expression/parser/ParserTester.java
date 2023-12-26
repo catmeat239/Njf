@@ -1,8 +1,8 @@
 package expression.parser;
 
 import base.ExtendedRandom;
-import base.Tester;
 import base.TestCounter;
+import base.Tester;
 import base.Unit;
 import expression.ToMiniString;
 import expression.common.ExpressionKind;

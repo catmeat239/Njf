@@ -12,7 +12,7 @@ public class CheckedNegate extends Negate {
 
     @Override
     protected int getResult(int x) {
-        if (-x != -(long)x) {
+        if (x == Integer.MIN_VALUE) {
             throw new OverflowEvaluateException(getSign() + x);
         }
         return super.getResult(x);

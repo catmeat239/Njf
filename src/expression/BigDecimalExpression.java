@@ -63,4 +63,3 @@ public interface BigDecimalExpression extends ToMiniString {
                 .main(args);
     }
 }
-

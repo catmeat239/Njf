@@ -4,7 +4,7 @@ public class StringCharSource implements CharSource {
     private final String string;
     private int pos = 0;
 
-    public StringCharSource(String string) {
+    public StringCharSource(final String string) {
         this.string = string;
     }
 

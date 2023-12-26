@@ -12,9 +12,9 @@ public class CheckedDivide extends Divide {
     @Override
     protected int getResult(int x, int y) {
         if (y == 0) {
-             throw new ExceptionsTest.DivisionByZeroEvaluateException(x + getSign() + y);
+             throw new DivisionByZeroEvaluateException(x + getSign() + y);
         }
-        if (x / y != (long)x / y) {
+        if (x == Integer.MIN_VALUE && y == -1) {
             throw new OverflowEvaluateException(x + getSign() + y);
         }
         return super.getResult(x, y);

@@ -4,6 +4,7 @@ public class MyTestParser {
     public static void main(String[] args) {
 
         ExpressionParser parser = new ExpressionParser();
+        System.out.println(parser.parse("(0 + 0)\n").evaluate(0,0,0));
        // System.out.println(parser.parse("(0))").toMiniString());
         // System.out.println(parser.parse("- l1((1))").toString());
         System.out.println(parser.parse("(z * (z * -(-1)))").toMiniString());

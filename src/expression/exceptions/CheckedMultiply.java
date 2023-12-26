@@ -13,9 +13,12 @@ public class CheckedMultiply extends Multiply {
 
     @Override
     protected int getResult(int x, int y) {
-        if ((long) x * y != x * y) {
+        int result = super.getResult(x, y);
+        // result + k * 2^32 == x * y   // k == 0 ?
+        // result / x + k * 2 ^ 32 / x == y
+        if (x != 0 && result / x != y || result == Integer.MIN_VALUE && x == -1) {
             throw new OverflowEvaluateException(x + getSign() + y);
         }
-        return super.getResult(x, y);
+        return result;
     }
 }
